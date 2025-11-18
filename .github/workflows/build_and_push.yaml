@@ -22,7 +22,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Set up Maven
-        run: sudo apt-get install -y mave
+        run: sudo apt-get install -y maven
 
       - name: Build Spring Boot app
         run: mvn clean package -DskipTests
