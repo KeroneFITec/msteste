@@ -1,0 +1,30 @@
+name: Deploy with Helm
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+
+      - name: Configure Kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.AWS_KUBECONFIG }}" > ~/.kube/config
+
+      - name: Deploy with Helm
+        run: |
+          helm upgrade --install msteste ./helm \
+            --set project.image=ghcr.io/${{ github.repository }}/msteste:latest \
+            --set rabbitmq.username=${{ secrets.RABBITMQ_USERNAME }} \
+            --set rabbitmq.password=${{ secrets.RABBITMQ_PASSWORD }} \
+            --set rabbitmq.vhost=${{ secrets.RABBITMQ_VIRTUAL_HOST }}

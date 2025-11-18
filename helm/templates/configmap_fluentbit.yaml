@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config-{{ .Values.project.name }}
+  namespace: {{ .Values.namespace }}
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush 1
+        Log_Level {{ .Values.fluentBit.log.level }}
+        Parsers_File parsers.conf
+
+    [INPUT]
+        Name tail
+        Tag springboot.*
+        Path /var/log/containers/{{ .Values.project.name }}*.log
+        Parser docker
+        Docker_Mode On
+
+    [FILTER]
+        Name kubernetes
+        Match springboot.*
+        Merge_Log On
+        Keep_Log Off
+
+    [OUTPUT]
+        Name tcp
+        Match springboot.*
+        Host logstash.elk.svc.cluster.local
+        Port 5000
+        Format json_lines
+
+
+  parsers.conf: |
+    [PARSER]
+        Name docker
+        Format json
+        Time_Key timestamp
+        Time_Format {{ .Values.fluentBit.timeFormat }}
+        Decode_Field_As escaped_utf8 log
